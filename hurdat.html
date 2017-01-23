@@ -1,0 +1,97 @@
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+    <title>Storm Tracker</title>
+    <script type="text/javascript"
+        src="https://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false&key=AIzaSyAjBqMrHZMSbfOCAoW3LZ_espJK3eJdMUo">
+        
+    </script>
+
+     <script type="text/javascript">
+    
+        function showArea() { $("#polygonarea").removeClass("hide"); }
+    </script>
+
+ </head>
+<body>
+
+    <div class="col-md-offset-3" id="latitudelong" style="position: absolute;bottom: 20px;z-index:1000;background: white;
+    padding: 10px;"></div>
+    
+    <div class="container" style="min-height:950px;">
+        <header>
+            <h1>Hurricane Data Retrieval and Plotter</h1>
+        </header>
+    
+        <div class="col-xs-12 col-md-2">
+            {{>queryForm}}
+            <br>
+            <div >
+              <h3 style="margin-top: 0px;"><span id="polygonarea"  class = "label label-info hide">Info Label</span></h3>
+
+              <button onclick="showArea();" type = "button" class = "btn btn-warning" style="margin-bottom:10px;margin-top:10px">Get Area</button>
+
+            </div>
+            <div class="sDetails" id="stormdetails">
+                {{>stormDetails}}
+            </div>
+            
+            <div class="sDetails hide" id="polygonDetails">
+            
+            </div>
+            
+        </div>
+        <div class="col-xs-12 col-md-10">
+            {{>stormMap}}
+        </div>
+        
+        <div class="col-xs-12 col-md-10">
+          
+                {{> polygonForm}}
+              <label class="hide" id="pleasewait">Please wait..</label>
+
+        </div>
+        
+        <div class="col-xs-12 col-md-10" id="pointsinfo"> 
+          
+
+        </div>
+        
+        
+    </div>
+    
+    
+</body>
+
+<template name="polygonForm">
+    <form>
+        <!-- your form -->
+          <button type="button" class="btn btn-primary" id="generatepolygon">Polygon</button>
+    </form>
+</template>
+<!--Query Form Template-->
+<template name="queryForm">
+    <form class="idQuery">
+        <p><input type="text" name="name"  placeholder="storm name"></p>
+        <p><input type="text" name="year"  placeholder="year"></p>
+        <input type="submit" value="submit">
+    </form>
+</template>
+<!--Google Map Template-->
+<template name="stormMap">
+    <div id="map"></div>
+</template>
+
+
+
+
+<!--Storm Selection List Template-->
+<template name="stormDetails">
+    {{#if didQuery}}
+        {{#each storms}}
+            <p class="select">{{this.name}} : {{this.id}}</p>
+        {{/each}}
+    {{/if}}
+</template>
+
+

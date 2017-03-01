@@ -9,6 +9,9 @@ if (Meteor.isClient) {
   var markerLocation ;
   var gpointsdata = "";
   var drawgraphs = true;
+  var runningwindowquery = false;
+  var runningpointquery = false;
+  var isintersected = false;
 
     
     HTTP.get(Meteor.absoluteUrl("file01.json"), function(err, result) {
@@ -86,11 +89,39 @@ if (Meteor.isClient) {
 
     var pointarray = [];
 
+	 function wickettopolywkt(poly1, poly2) {
+    var wicket = new Wkt.Wkt();
 
+    wicket.fromObject(poly1);
+    var wkt1 = wicket.write();
+
+    wicket.fromObject(poly2);
+    var wkt2 = wicket.write();
+
+    return [wkt1, wkt2];
+  }
+  
+    function jstforintersection(wkt1, wkt2) {
+    var wktReader = new jsts.io.WKTReader();
+    var geom1 = wktReader.read(wkt1);
+    var geom2 = wktReader.read(wkt2);
+
+    if (geom2.intersects(geom1)) {
+	
+	 // console.log('intersected');
+	  isintersected = true;
+    } else {
+	  //console.log('no intercet');
+	  isintersected = false;
+	  
+    }
+  }
+   var windowquerypolygon ;
 
     Template.polygonForm.events({
         'click #generatepolygon': function(e) {
-
+            runningwindowquery = true;
+			drawgraphs = false;
             // document.getElementById("pleasewait").className = "";
             $("#pleasewait").removeClass("hide");
             //console.log(pointarray);
@@ -108,7 +139,7 @@ if (Meteor.isClient) {
             })
             
             dpolygon.setMap(map);
-
+            windowquerypolygon = dpolygon;
 
 
 
@@ -120,37 +151,22 @@ if (Meteor.isClient) {
 
 
                 var latlngarray = stormdata[count].latLng;
+				var coords = stormdata[count];
+               Session.set('queryCoords', coords.latLng);
+            Session.set('NE', coords['34NE']);
+            Session.set('SE', coords['34SE']);
+            Session.set('SW', coords['34SW']);
+            Session.set('NW', coords['34NW']);
+            $('.select').removeClass('selected');
+            $(event.currentTarget).addClass('selected');
+			
+			isintersected = false;
+              initMap(false);
+              if(isintersected){
+			       pointsdata = pointsdata + " <p class='select ' name='" + stormdata[count]._id + "'>" + stormdata[count].name + " : " + stormdata[count].id + "</p>";
 
-                if (polygonstorms.indexOf(stormdata[count].name) > -1) {
-                    //console.log("contains");
-                    continue;
-                }
-                //console.log("execiting");
-
-
-                polygonstorms.push(stormdata[count].name);
-
-                //console.log(latlngarray);
-
-                for (var count1 = 0; count1 < latlngarray.length; count1++) {
-
-
-                    var lpoint = new google.maps.LatLng(latlngarray[count1][0], latlngarray[count1][1]);
-                    // console.log(lpoint);
-                    //      console.log();
-
-                    if (google.maps.geometry.poly.isLocationOnEdge(lpoint, dpolygon)) {
-
-                        //  pointsdata  = pointsdata + ":: Name : "+ stormdata[count].name +"<br>";
-                        break;
-                    }
-                    if (google.maps.geometry.poly.containsLocation(lpoint, dpolygon)) {
-                        pointsdata = pointsdata + " <p class='select ' name='" + stormdata[count]._id + "'>" + stormdata[count].name + " : " + stormdata[count].id + "</p>";
-
-                        //console.log(stormdata[count].name);
-                        break;
-                    }
-                }
+			  }
+			 
             }
 
             $("#polygonDetails").html(pointsdata);
@@ -162,21 +178,22 @@ if (Meteor.isClient) {
 
             $("p").click(function() {
 
-			     console.log('removing');
-			    
- polyLine.setMap(null);
+				polyLine.setMap(null);
 				for(var temp=0;temp<poly.length;temp++) {
-				        poly[temp].setMap(null);
+				     poly[temp].setMap(null);
 				}
-			 
                 var id = $(this).attr("name");
 
                 $('.select').removeClass('selected');
-                $(this).addClass('selected');
+               // $(this).addClass('selected');
 
 
                 drawPolyGonOnClick(id);
             });
+			runningwindowquery = false;
+						drawgraphs = true;
+
+
         }
     });
     //Helper that queries either with name or year
@@ -257,11 +274,16 @@ if (Meteor.isClient) {
         polyarea = polyarea + google.maps.geometry.spherical.computeArea(poly[poly.length - 1].getPath());
 		}
 		if(markerLocation!=undefined) {
-		console.log(markerLocation)
+	//	console.log(markerLocation)
          if (google.maps.geometry.poly.containsLocation(markerLocation, poly[poly.length - 1])) {
              gcontainslocation = true;
           }
 		  }
+		  
+		  if(runningwindowquery && windowquerypolygon!=undefined && array.length>0){
+		 var wkt = wickettopolywkt(poly[poly.length - 1], windowquerypolygon);
+         jstforintersection(wkt[0], wkt[1]);
+		 }
         //console.log(z);
 
     }
@@ -286,7 +308,13 @@ if (Meteor.isClient) {
 		    gcontainslocation = true;
          }
 		 }
+		 
+		  if( runningwindowquery && windowquerypolygon!=undefined &&array.length>0){
+	//	 console.log(windowquerypolygon);
 
+		 var wkt = wickettopolywkt(polyLine, windowquerypolygon);
+         jstforintersection(wkt[0], wkt[1]);
+		 }
     }
 
     initMap = function(initializer) {
@@ -368,6 +396,15 @@ if (Meteor.isClient) {
             drawPoly(array);
 			
             array = [];
+			
+			if(runningwindowquery && isintersected){
+			  return;
+			}
+			if(runningpointquery && gcontainslocation){
+			  return;
+			}
+			
+			
         }
         drawPLine(pLine);
         pLine = [];
@@ -412,6 +449,7 @@ if (Meteor.isClient) {
 		
 	
         function displayPointStorms(location) {
+		runningpointquery = true;
 		markerLocation = location;
 		drawgraphs = false;
             $("#pleasewait").css('visibility', 'visible');
@@ -435,7 +473,6 @@ if (Meteor.isClient) {
             Session.set('NW', coords['34NW']);
             $('.select').removeClass('selected');
             $(event.currentTarget).addClass('selected');
-			
             initMap(false);
 			
 			if(gcontainslocation){
@@ -458,14 +495,13 @@ if (Meteor.isClient) {
 
             $("p").click(function() {
 
-			 polyLine.setMap(null);
+		 	polyLine.setMap(null);
 				for(var temp=0;temp<poly.length;temp++) {
-				        poly[temp].setMap(null);
+				     poly[temp].setMap(null);
 				}
-			 
                 var id = $(this).attr("name");
                 $('.select').removeClass('selected');
-                $(this).addClass('selected');
+                //$(this).addClass('selected');
 
 
                 drawPolyGonOnClick(id);
@@ -476,6 +512,7 @@ if (Meteor.isClient) {
             // document.getElementById("pleasewait").className = "hide";
             //$( "#pleasewait" ).addClass("hide");
 	    	drawgraphs = true;
+		runningpointquery = false;
 
 
         }

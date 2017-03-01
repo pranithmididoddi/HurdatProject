@@ -3,13 +3,22 @@
         <meta charset="utf-8">
     <title>Storm Tracker</title>
     <script type="text/javascript"
-        src="https://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false&key=AIzaSyAjBqMrHZMSbfOCAoW3LZ_espJK3eJdMUo">
-        
+        src="https://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false&key=AIzaSyAjBqMrHZMSbfOCAoW3LZ_espJK3eJdMUo&v=3">
+		
     </script>
+ 
+	<script src="http://arthur-e.github.io/Wicket/wicket.js"></script>
+		<script src="http://arthur-e.github.io/Wicket/wicket-gmap3.js"></script>
 
-     <script type="text/javascript">
-    
-        function showArea() { $("#polygonarea").removeClass("hide"); }
+		<script src="http://bl.ocks.org/christophermanning/raw/4450188/javascript.util.min.js"></script>
+
+		<script src="http://bl.ocks.org/christophermanning/raw/4450188/jsts.min.js"></script>
+
+
+
+	 <script type="text/javascript">
+	
+		function showArea() { $("#polygonarea").removeClass("hide"); }
     </script>
 
  </head>
@@ -17,56 +26,56 @@
 
     <div class="col-md-offset-3" id="latitudelong" style="position: absolute;bottom: 20px;z-index:1000;background: white;
     padding: 10px;"></div>
-    
+	
     <div class="container" style="min-height:950px;">
         <header>
             <h1>Hurricane Data Retrieval and Plotter</h1>
         </header>
-    
+	
         <div class="col-xs-12 col-md-2">
             {{>queryForm}}
             <br>
-            <div >
-              <h3 style="margin-top: 0px;"><span id="polygonarea"  class = "label label-info hide">Info Label</span></h3>
-              <label class="hide" id="pleasewait">Please wait..</label>
+			<div >
+			  <h3 style="margin-top: 0px;"><span id="polygonarea"  class = "label label-info hide">Info Label</span></h3>
+			  <label class="hide" id="pleasewait">Please wait..</label>
 
-              <button onclick="showArea();" type = "button" class = "btn btn-warning" style="margin-bottom:10px;margin-top:10px">Get Area</button>
+			  <button onclick="showArea();" type = "button" class = "btn btn-warning" style="margin-bottom:10px;margin-top:10px">Get Area</button>
 
             </div>
             <div class="sDetails" id="stormdetails">
                 {{>stormDetails}}
             </div>
-            
-            <div class="sDetails hide" id="polygonDetails">
-            
+			
+			<div class="sDetails hide" id="polygonDetails">
+			
             </div>
-            
+			
         </div>
         <div class="col-xs-12 col-md-10">
             {{>stormMap}}
         </div>
-        
-        <div class="col-xs-12 col-md-10">
+		
+		<div class="col-xs-12 col-md-10">
           
                 {{> polygonForm}}
 
         </div>
-        
-        <div class="col-xs-12 col-md-10" id="pointsinfo"> 
+		
+		<div class="col-xs-12 col-md-10" id="pointsinfo"> 
           
 
         </div>
-        
-        
+		
+		
     </div>
-    
-    
+	
+	
 </body>
 
 <template name="polygonForm">
     <form>
         <!-- your form -->
-          <button type="button" class="btn btn-primary" id="generatepolygon">Polygon</button>
+		  <button type="button" class="btn btn-primary" id="generatepolygon">Polygon</button>
     </form>
 </template>
 <!--Query Form Template-->
